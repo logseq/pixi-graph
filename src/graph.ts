@@ -11,7 +11,7 @@ import { Cull } from '@pixi-essentials/cull';
 import { AbstractGraph } from 'graphology-types';
 import { IAddOptions } from 'resource-loader';
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { GraphStyleDefinition, resolveStyleDefinitions } from './utils/style';
+import { NodeStyle, GraphStyleDefinition, resolveStyleDefinitions } from './utils/style';
 import { TextType } from './utils/text';
 import { BaseNodeAttributes, BaseEdgeAttributes } from './attributes';
 import { TextureCache } from './texture-cache';
@@ -371,6 +371,11 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
     const nodeStyleDefinitions = [DEFAULT_STYLE.node, this.style.node, node.hovered ? this.hoverStyle.node : undefined];
       const nodeStyle = resolveStyleDefinitions(nodeStyleDefinitions, nodeAttributes);
       console.dir(nodeStyle);
+    node.updateStyle(nodeStyle, this.textureCache);
+  }
+
+  private resetNodeStyle(nodeKey: string, nodeStyle: NodeStyle) {
+    const node = this.nodeKeyToNodeObject.get(nodeKey)!;
     node.updateStyle(nodeStyle, this.textureCache);
   }
 
