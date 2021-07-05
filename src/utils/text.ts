@@ -23,7 +23,11 @@ export function textToPixi(type: TextType, content: string, style: TextStyle) {
     text = new Text(content, {
       fontFamily: style.fontFamily,
       fontSize: style.fontSize,
-      fill: WHITE
+      fill: WHITE,
+      align: center,
+      lineJoin: 'round',
+      wordWrap: true,
+      wordWrapWidth; 240
     });
   } else if (type === TextType.BITMAP_TEXT) {
     text = new BitmapText(content, {
