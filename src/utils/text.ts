@@ -24,10 +24,10 @@ export function textToPixi(type: TextType, content: string, style: TextStyle) {
       fontFamily: style.fontFamily,
       fontSize: style.fontSize,
       fill: WHITE,
-      align: center,
+      align: 'center',
       lineJoin: 'round',
       wordWrap: true,
-      wordWrapWidth; 240
+      wordWrapWidth: 240
     });
   } else if (type === TextType.BITMAP_TEXT) {
     text = new BitmapText(content, {

@@ -10,13 +10,6 @@ export interface GraphStyle {
       width: number;
       color: string;
     };
-    icon: {
-      content: string;
-      type: TextType;
-      fontFamily: string;
-      fontSize: number;
-      color: string;
-    };
     label: {
       content: string;
       type: TextType;

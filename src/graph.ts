@@ -32,13 +32,6 @@ const DEFAULT_STYLE: GraphStyleDefinition = {
       width: 2,
       color: '#ffffff',
     },
-    icon: {
-      type: TextType.TEXT,
-      fontFamily: 'Arial',
-      fontSize: 20,
-      color: '#ffffff',
-      content: '',
-    },
     label: {
       type: TextType.TEXT,
       fontFamily: 'Arial',
@@ -458,7 +451,8 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
     // create PIXI application
     this.app = new Application({
       resizeTo: this.container,
-      resolution: window.devicePixelRatio,
+      // resolution: window.devicePixelRatio,
+      resolution: 2,
       transparent: true,
       antialias: true,
       autoDensity: true,
@@ -480,7 +474,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
       .pinch()
       .wheel()
       .decelerate()
-      .clampZoom({ maxScale: 3 });
+      .clampZoom({ minScale: 0.1, maxScale: 2.5 });
     this.app.stage.addChild(this.viewport);
 
     // create layers
