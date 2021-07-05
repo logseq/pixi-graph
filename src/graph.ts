@@ -11,7 +11,7 @@ import { Cull } from '@pixi-essentials/cull';
 import { AbstractGraph } from 'graphology-types';
 import { IAddOptions } from 'resource-loader';
 import { TypedEmitter } from 'tiny-typed-emitter';
-import { NodeStyle, EdgeStyle GraphStyleDefinition, resolveStyleDefinitions } from './utils/style';
+import { NodeStyle, EdgeStyle, GraphStyleDefinition, resolveStyleDefinitions } from './utils/style';
 import { TextType } from './utils/text';
 import { BaseNodeAttributes, BaseEdgeAttributes } from './attributes';
 import { TextureCache } from './texture-cache';
