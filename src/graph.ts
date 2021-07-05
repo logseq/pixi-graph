@@ -374,9 +374,9 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
     node.updateStyle(nodeStyle, this.textureCache);
   }
 
-  private resetNodeStyle(nodeKey: string, nodeStyle: NodeStyle) {
+  resetNodeStyle(nodeKey: string, nodeStyle: NodeStyle) {
     const node = this.nodeKeyToNodeObject.get(nodeKey)!;
-    node.updateStyle(nodeStyle, this.textureCache);
+    node.updateNodeStyle(nodeStyle, this.textureCache);
   }
 
   private updateEdgeStyleByKey(edgeKey: string) {
