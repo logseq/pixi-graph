@@ -61,7 +61,6 @@ export function updateNodeStyle(nodeGfx: Container, nodeStyle: NodeStyle, textur
   // nodeGfx -> nodeCircleBorder
   const nodeCircleBorder = nodeGfx.getChildByName!(NODE_CIRCLE_BORDER) as Sprite;
   nodeCircleBorder.texture = nodeCircleBorderTexture;
-  console.log(nodeStyle);
   [nodeCircleBorder.tint, nodeCircleBorder.alpha] = colorToPixi(nodeStyle.border.color);
 }
 

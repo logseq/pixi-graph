@@ -370,7 +370,6 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
         const nodeStyleDefinitions = [DEFAULT_STYLE.node, this.style.node, node.hovered ? this.hoverStyle.node : undefined];
         const nodeStyle = resolveStyleDefinitions(nodeStyleDefinitions, nodeAttributes);
-        console.dir(nodeStyle);
         node.updateStyle(nodeStyle, this.textureCache);
     }
 
