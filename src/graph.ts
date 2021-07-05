@@ -103,168 +103,6 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
   private mousedownNodeKey: string | null = null;
   private mousedownEdgeKey: string | null = null;
 
-  private onGraphNodeAddedBound = this.onGraphNodeAdded.bind(this);
-  private onGraphEdgeAddedBound = this.onGraphEdgeAdded.bind(this);
-  private onGraphNodeDroppedBound = this.onGraphNodeDropped.bind(this);
-  private onGraphEdgeDroppedBound = this.onGraphEdgeDropped.bind(this);
-  private onGraphClearedBound = this.onGraphCleared.bind(this);
-  private onGraphEdgesClearedBound = this.onGraphEdgesCleared.bind(this);
-  private onGraphNodeAttributesUpdatedBound = this.onGraphNodeAttributesUpdated.bind(this);
-  private onGraphEdgeAttributesUpdatedBound = this.onGraphEdgeAttributesUpdated.bind(this);
-  private onGraphEachNodeAttributesUpdatedBound = this.onGraphEachNodeAttributesUpdated.bind(this);
-  private onGraphEachEdgeAttributesUpdatedBound = this.onGraphEachEdgeAttributesUpdated.bind(this);
-  private onDocumentMouseMoveBound = this.onDocumentMouseMove.bind(this);
-  private onDocumentMouseUpBound = this.onDocumentMouseUp.bind(this);
-
-  constructor(options: GraphOptions<NodeAttributes, EdgeAttributes>) {
-    super();
-
-    this.container = options.container;
-    this.graph = options.graph;
-    this.style = options.style;
-    this.hoverStyle = options.hoverStyle;
-    this.resources = options.resources;
-
-    if (!(this.container instanceof HTMLElement)) {
-      throw new Error('container should be a HTMLElement');
-    }
-
-    // create PIXI application
-    this.app = new Application({
-      resizeTo: this.container,
-      resolution: window.devicePixelRatio,
-      transparent: true,
-      antialias: true,
-      autoDensity: true,
-    });
-    this.container.appendChild(this.app.view);
-
-    this.app.renderer.plugins.interaction.moveWhenInside = true;
-    this.app.view.addEventListener('wheel', event => { event.preventDefault() });
-
-    this.textureCache = new TextureCache(this.app.renderer);
-
-    // create PIXI viewport
-    this.viewport = new Viewport({
-      screenWidth: this.container.clientWidth,
-      screenHeight: this.container.clientHeight,
-      interaction: this.app.renderer.plugins.interaction
-    })
-      .drag()
-      .pinch()
-      .wheel()
-      .decelerate()
-      .clampZoom({ maxScale: 1 });
-    this.app.stage.addChild(this.viewport);
-
-    // create layers
-    this.edgeLayer = new Container();
-    this.frontEdgeLayer = new Container();
-    this.nodeLayer = new Container();
-    this.nodeLabelLayer = new Container();
-    this.frontNodeLayer = new Container();
-    this.frontNodeLabelLayer = new Container();
-    this.viewport.addChild(this.edgeLayer);
-    this.viewport.addChild(this.frontEdgeLayer);
-    this.viewport.addChild(this.nodeLayer);
-    this.viewport.addChild(this.nodeLabelLayer);
-    this.viewport.addChild(this.frontNodeLayer);
-    this.viewport.addChild(this.frontNodeLabelLayer);
-
-    this.resizeObserver = new ResizeObserver(() => {
-      this.app.resize();
-      this.viewport.resize(this.container.clientWidth, this.container.clientHeight);
-      this.updateGraphVisibility();
-    });
-
-    // preload resources
-    if (this.resources) {
-      this.app.loader.add(this.resources);
-    }
-    this.app.loader.load(() => {
-      this.viewport.on('frame-end', () => {
-        if (this.viewport.dirty) {
-          this.updateGraphVisibility();
-          this.viewport.dirty = false;
-        }
-      });
-
-      this.resizeObserver.observe(this.container);
-
-      // listen to graph changes
-      this.graph.on('nodeAdded', this.onGraphNodeAddedBound);
-      this.graph.on('edgeAdded', this.onGraphEdgeAddedBound);
-      this.graph.on('nodeDropped', this.onGraphNodeDroppedBound);
-      this.graph.on('edgeDropped', this.onGraphEdgeDroppedBound);
-      this.graph.on('cleared', this.onGraphClearedBound);
-      this.graph.on('edgesCleared', this.onGraphEdgesClearedBound);
-      this.graph.on('nodeAttributesUpdated', this.onGraphNodeAttributesUpdatedBound);
-      this.graph.on('edgeAttributesUpdated', this.onGraphEdgeAttributesUpdatedBound);
-      this.graph.on('eachNodeAttributesUpdated', this.onGraphEachNodeAttributesUpdatedBound);
-      this.graph.on('eachEdgeAttributesUpdated', this.onGraphEachEdgeAttributesUpdatedBound);
-
-      // initial draw
-      this.createGraph();
-      this.resetView();
-    });
-  }
-
-  destroy() {
-    this.graph.off('nodeAdded', this.onGraphNodeAddedBound);
-    this.graph.off('edgeAdded', this.onGraphEdgeAddedBound);
-    this.graph.off('nodeDropped', this.onGraphNodeDroppedBound);
-    this.graph.off('edgeDropped', this.onGraphEdgeDroppedBound);
-    this.graph.off('cleared', this.onGraphClearedBound);
-    this.graph.off('edgesCleared', this.onGraphEdgesClearedBound);
-    this.graph.off('nodeAttributesUpdated', this.onGraphNodeAttributesUpdatedBound);
-    this.graph.off('edgeAttributesUpdated', this.onGraphEdgeAttributesUpdatedBound);
-    this.graph.off('eachNodeAttributesUpdated', this.onGraphEachNodeAttributesUpdatedBound);
-    this.graph.off('eachEdgeAttributesUpdated', this.onGraphEachEdgeAttributesUpdatedBound);
-
-    this.resizeObserver.disconnect();
-    this.resizeObserver = undefined!;
-
-    this.textureCache.destroy();
-    this.textureCache = undefined!;
-
-    this.app.destroy(true, { children: true, texture: true, baseTexture: true });
-    this.app = undefined!;
-  }
-
-  private get zoomStep() {
-    return Math.min(this.viewport.worldWidth, this.viewport.worldHeight) / 10;
-  }
-
-  zoomIn() {
-    this.viewport.zoom(-this.zoomStep, true);
-  }
-
-  zoomOut() {
-    this.viewport.zoom(this.zoomStep, true);
-  }
-
-  resetView() {
-    const nodesX = this.graph.nodes().map(nodeKey => this.graph.getNodeAttribute(nodeKey, 'x'));
-    const nodesY = this.graph.nodes().map(nodeKey => this.graph.getNodeAttribute(nodeKey, 'y'));
-    const minX = Math.min(...nodesX);
-    const maxX = Math.max(...nodesX);
-    const minY = Math.min(...nodesY);
-    const maxY = Math.max(...nodesY);
-
-    const graphWidth = Math.abs(maxX - minX);
-    const graphHeight = Math.abs(maxY - minY);
-    const graphCenter = new Point(minX + graphWidth / 2, minY + graphHeight / 2);
-
-    const worldWidth = graphWidth + WORLD_PADDING * 2;
-    const worldHeight = graphHeight + WORLD_PADDING * 2;
-    
-    // TODO: update worldWidth/worldHeight when graph is updated?
-    this.viewport.resize(this.container.clientWidth, this.container.clientHeight, worldWidth, worldHeight);
-
-    this.viewport.setZoom(1); // otherwise scale is 0 when initialized in React useEffect
-    this.viewport.center = graphCenter;
-    this.viewport.fit(true);
-  }
 
   private onGraphNodeAdded(data: { key: string, attributes: NodeAttributes }) {
     const nodeKey = data.key;
@@ -510,7 +348,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
   private dropNode(nodeKey: string) {
     const node = this.nodeKeyToNodeObject.get(nodeKey)!;
-    
+
     this.nodeLayer.removeChild(node.nodeGfx);
     this.nodeLabelLayer.removeChild(node.nodeLabelGfx);
     this.frontNodeLayer.removeChild(node.nodePlaceholderGfx);
@@ -520,7 +358,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
   private dropEdge(edgeKey: string) {
     const edge = this.edgeKeyToEdgeObject.get(edgeKey)!;
-    
+
     this.edgeLayer.removeChild(edge.edgeGfx);
     this.frontEdgeLayer.removeChild(edge.edgePlaceholderGfx);
     this.edgeKeyToEdgeObject.delete(edgeKey);
@@ -533,7 +371,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
   private updateNodeStyle(nodeKey: string, nodeAttributes: NodeAttributes) {
     const node = this.nodeKeyToNodeObject.get(nodeKey)!;
-    
+
     const nodePosition = { x: nodeAttributes.x, y: nodeAttributes.y };
     node.updatePosition(nodePosition);
 
@@ -589,5 +427,168 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
       const edge = this.edgeKeyToEdgeObject.get(edgeKey)!;
       edge.updateVisibility(zoomStep);
     });
+  }
+
+  private onGraphNodeAddedBound = this.onGraphNodeAdded.bind(this);
+  private onGraphEdgeAddedBound = this.onGraphEdgeAdded.bind(this);
+  private onGraphNodeDroppedBound = this.onGraphNodeDropped.bind(this);
+  private onGraphEdgeDroppedBound = this.onGraphEdgeDropped.bind(this);
+  private onGraphClearedBound = this.onGraphCleared.bind(this);
+  private onGraphEdgesClearedBound = this.onGraphEdgesCleared.bind(this);
+  private onGraphNodeAttributesUpdatedBound = this.onGraphNodeAttributesUpdated.bind(this);
+  private onGraphEdgeAttributesUpdatedBound = this.onGraphEdgeAttributesUpdated.bind(this);
+  private onGraphEachNodeAttributesUpdatedBound = this.onGraphEachNodeAttributesUpdated.bind(this);
+  private onGraphEachEdgeAttributesUpdatedBound = this.onGraphEachEdgeAttributesUpdated.bind(this);
+  private onDocumentMouseMoveBound = this.onDocumentMouseMove.bind(this);
+  private onDocumentMouseUpBound = this.onDocumentMouseUp.bind(this);
+
+  constructor(options: GraphOptions<NodeAttributes, EdgeAttributes>) {
+    super();
+
+    this.container = options.container;
+    this.graph = options.graph;
+    this.style = options.style;
+    this.hoverStyle = options.hoverStyle;
+    this.resources = options.resources;
+
+    if (!(this.container instanceof HTMLElement)) {
+      throw new Error('container should be a HTMLElement');
+    }
+
+    // create PIXI application
+    this.app = new Application({
+      resizeTo: this.container,
+      resolution: window.devicePixelRatio,
+      transparent: true,
+      antialias: true,
+      autoDensity: true,
+    });
+    this.container.appendChild(this.app.view);
+
+    this.app.renderer.plugins.interaction.moveWhenInside = true;
+    this.app.view.addEventListener('wheel', event => { event.preventDefault() });
+
+    this.textureCache = new TextureCache(this.app.renderer);
+
+    // create PIXI viewport
+    this.viewport = new Viewport({
+      screenWidth: this.container.clientWidth,
+      screenHeight: this.container.clientHeight,
+      interaction: this.app.renderer.plugins.interaction
+    })
+      .drag()
+      .pinch()
+      .wheel()
+      .decelerate()
+      .clampZoom({ maxScale: 3 });
+    this.app.stage.addChild(this.viewport);
+
+    // create layers
+    this.edgeLayer = new Container();
+    this.frontEdgeLayer = new Container();
+    this.nodeLayer = new Container();
+    this.nodeLabelLayer = new Container();
+    this.frontNodeLayer = new Container();
+    this.frontNodeLabelLayer = new Container();
+    this.viewport.addChild(this.edgeLayer);
+    this.viewport.addChild(this.frontEdgeLayer);
+    this.viewport.addChild(this.nodeLayer);
+    this.viewport.addChild(this.nodeLabelLayer);
+    this.viewport.addChild(this.frontNodeLayer);
+    this.viewport.addChild(this.frontNodeLabelLayer);
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.app.resize();
+      this.viewport.resize(this.container.clientWidth, this.container.clientHeight);
+      this.updateGraphVisibility();
+    });
+
+    // preload resources
+    if (this.resources) {
+      this.app.loader.add(this.resources);
+    }
+    this.app.loader.load(() => {
+      this.viewport.on('frame-end', () => {
+        if (this.viewport.dirty) {
+          this.updateGraphVisibility();
+          this.viewport.dirty = false;
+        }
+      });
+
+      this.resizeObserver.observe(this.container);
+
+      // listen to graph changes
+      this.graph.on('nodeAdded', this.onGraphNodeAddedBound);
+      this.graph.on('edgeAdded', this.onGraphEdgeAddedBound);
+      this.graph.on('nodeDropped', this.onGraphNodeDroppedBound);
+      this.graph.on('edgeDropped', this.onGraphEdgeDroppedBound);
+      this.graph.on('cleared', this.onGraphClearedBound);
+      this.graph.on('edgesCleared', this.onGraphEdgesClearedBound);
+      this.graph.on('nodeAttributesUpdated', this.onGraphNodeAttributesUpdatedBound);
+      this.graph.on('edgeAttributesUpdated', this.onGraphEdgeAttributesUpdatedBound);
+      this.graph.on('eachNodeAttributesUpdated', this.onGraphEachNodeAttributesUpdatedBound);
+      this.graph.on('eachEdgeAttributesUpdated', this.onGraphEachEdgeAttributesUpdatedBound);
+
+      // initial draw
+      this.createGraph();
+      this.resetView();
+    });
+  }
+
+  destroy() {
+    this.graph.off('nodeAdded', this.onGraphNodeAddedBound);
+    this.graph.off('edgeAdded', this.onGraphEdgeAddedBound);
+    this.graph.off('nodeDropped', this.onGraphNodeDroppedBound);
+    this.graph.off('edgeDropped', this.onGraphEdgeDroppedBound);
+    this.graph.off('cleared', this.onGraphClearedBound);
+    this.graph.off('edgesCleared', this.onGraphEdgesClearedBound);
+    this.graph.off('nodeAttributesUpdated', this.onGraphNodeAttributesUpdatedBound);
+    this.graph.off('edgeAttributesUpdated', this.onGraphEdgeAttributesUpdatedBound);
+    this.graph.off('eachNodeAttributesUpdated', this.onGraphEachNodeAttributesUpdatedBound);
+    this.graph.off('eachEdgeAttributesUpdated', this.onGraphEachEdgeAttributesUpdatedBound);
+
+    this.resizeObserver.disconnect();
+    this.resizeObserver = undefined!;
+
+    this.textureCache.destroy();
+    this.textureCache = undefined!;
+
+    this.app.destroy(true, { children: true, texture: true, baseTexture: true });
+    this.app = undefined!;
+  }
+
+  private get zoomStep() {
+    return Math.min(this.viewport.worldWidth, this.viewport.worldHeight) / 10;
+  }
+
+  zoomIn() {
+    this.viewport.zoom(-this.zoomStep, true);
+  }
+
+  zoomOut() {
+    this.viewport.zoom(this.zoomStep, true);
+  }
+
+  resetView() {
+    const nodesX = this.graph.nodes().map(nodeKey => this.graph.getNodeAttribute(nodeKey, 'x'));
+    const nodesY = this.graph.nodes().map(nodeKey => this.graph.getNodeAttribute(nodeKey, 'y'));
+    const minX = Math.min(...nodesX);
+    const maxX = Math.max(...nodesX);
+    const minY = Math.min(...nodesY);
+    const maxY = Math.max(...nodesY);
+
+    const graphWidth = Math.abs(maxX - minX);
+    const graphHeight = Math.abs(maxY - minY);
+    const graphCenter = new Point(minX + graphWidth / 2, minY + graphHeight / 2);
+
+    const worldWidth = graphWidth + WORLD_PADDING * 2;
+    const worldHeight = graphHeight + WORLD_PADDING * 2;
+
+    // TODO: update worldWidth/worldHeight when graph is updated?
+    this.viewport.resize(this.container.clientWidth, this.container.clientHeight, worldWidth, worldHeight);
+
+    this.viewport.setZoom(1); // otherwise scale is 0 when initialized in React useEffect
+    this.viewport.center = graphCenter;
+    this.viewport.fit(true);
   }
 }
