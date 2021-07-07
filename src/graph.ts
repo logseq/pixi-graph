@@ -485,7 +485,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
             .pinch()
             .wheel()
             .decelerate()
-            .clampZoom({ minScale: 0.1, maxScale: 2.5 });
+            .clampZoom({ minScale: 0.1, maxScale: 2.0 });
         this.app.stage.addChild(this.viewport);
 
         // create layers
