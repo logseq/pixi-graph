@@ -1,6 +1,6 @@
 {
   "name": "pixi-graph-fork",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "Graph visualization library using PIXI.js and Graphology",
   "keywords": [
     "pixi",
