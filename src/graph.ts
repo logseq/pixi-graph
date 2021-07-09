@@ -266,11 +266,20 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
         this.mousedownEdgeKey = null;
     }
 
-    private createGraph(f: any) {
-        let nodes = Array.from(this.graph.nodeEntries());
+    private createGraphAux(f: any, graph: any) {
+        let nodes = Array.from(graph.nodeEntries());
         batch(this.createNode.bind(this), nodes, 20, 0, 100, f);
-        let edges = Array.from(this.graph.edgeEntries());
+        let edges = Array.from(graph.edgeEntries());
         batch(this.createEdge.bind(this), edges, 20, 0, 200, f);
+    }
+
+    private createGraph(f: any) {
+        this.createGraphAux(f, this.graph);
+    }
+
+    createGraphWithGraph(graph: any) {
+        this.createGraphAux(this.resetView.bind(this), graph);
+        this.resetView();
     }
 
     private createNode(nodeKey: string, nodeAttributes: NodeAttributes) {
@@ -354,7 +363,6 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
     private dropEdge(edgeKey: string) {
         const edge = this.edgeKeyToEdgeObject.get(edgeKey)!;
-
         this.edgeLayer.removeChild(edge.edgeGfx);
         this.frontEdgeLayer.removeChild(edge.edgePlaceholderGfx);
         this.edgeKeyToEdgeObject.delete(edgeKey);
@@ -469,7 +477,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
             // resolution: window.devicePixelRatio,
             resolution: 2,
             transparent: true,
-            antialias: true,
+            // antialias: true,
             autoDensity: true,
         });
         this.container.appendChild(this.app.view);
@@ -556,10 +564,17 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
         this.graph.off('eachNodeAttributesUpdated', this.onGraphEachNodeAttributesUpdatedBound);
         this.graph.off('eachEdgeAttributesUpdated', this.onGraphEachEdgeAttributesUpdatedBound);
 
-        this.resizeObserver.disconnect();
+
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+
         this.resizeObserver = undefined!;
 
-        this.textureCache.destroy();
+        if (this.textureCache) {
+            this.textureCache.destroy();
+        }
+
         this.textureCache = undefined!;
 
         this.app.destroy(true, { children: true, texture: true, baseTexture: true });
@@ -599,5 +614,10 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
         this.viewport.setZoom(1); // otherwise scale is 0 when initialized in React useEffect
         this.viewport.center = graphCenter;
         this.viewport.fit(true);
+    }
+
+    resetTextureCache() {
+        this.textureCache.destroy();
+        this.textureCache = new TextureCache(this.app.renderer);
     }
 }
