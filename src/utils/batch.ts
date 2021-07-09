@@ -10,7 +10,6 @@ export function batch(f: any, col: any, timeout: number, offset: number, batchNu
         }, timeout);
     } else {
         if(finish) {
-            console.log("finish");
             finish();
         }
     }
