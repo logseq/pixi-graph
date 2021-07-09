@@ -17,6 +17,7 @@ import { BaseNodeAttributes, BaseEdgeAttributes } from './attributes';
 import { TextureCache } from './texture-cache';
 import { PixiNode } from './node';
 import { PixiEdge } from './edge';
+import { batch } from './utils/batch';
 
 Application.registerPlugin(TickerPlugin);
 Application.registerPlugin(AppLoaderPlugin);
@@ -265,9 +266,11 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
         this.mousedownEdgeKey = null;
     }
 
-    private createGraph() {
-        this.graph.forEachNode(this.createNode.bind(this));
-        this.graph.forEachEdge(this.createEdge.bind(this));
+    private createGraph(f: any) {
+        let nodes = Array.from(this.graph.nodeEntries());
+        batch(this.createNode.bind(this), nodes, 20, 0, 100, f);
+        let edges = Array.from(this.graph.edgeEntries());
+        batch(this.createEdge.bind(this), edges, 20, 0, 200, f);
     }
 
     private createNode(nodeKey: string, nodeAttributes: NodeAttributes) {
@@ -424,12 +427,12 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
         this.graph.forEachNode(nodeKey => {
             const node = this.nodeKeyToNodeObject.get(nodeKey)!;
-            node.updateVisibility(zoomStep);
+            if (node) {node.updateVisibility(zoomStep);}
         });
 
         this.graph.forEachEdge(edgeKey => {
             const edge = this.edgeKeyToEdgeObject.get(edgeKey)!;
-            edge.updateVisibility(zoomStep);
+            if (edge) {edge.updateVisibility(zoomStep);}
         });
     }
 
@@ -448,7 +451,6 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
 
     constructor(options: GraphOptions<NodeAttributes, EdgeAttributes>) {
         super();
-
         this.container = options.container;
         this.graph = options.graph;
         this.style = options.style;
@@ -535,7 +537,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
             this.graph.on('eachEdgeAttributesUpdated', this.onGraphEachEdgeAttributesUpdatedBound);
 
             // initial draw
-            this.createGraph();
+            this.createGraph(this.resetView.bind(this));
             this.resetView();
         });
     }
