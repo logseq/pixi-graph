@@ -420,20 +420,22 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
         //   Array.from((cull as any)._targetList as Set<DisplayObject>).filter(x => x.visible === false).length
         // );
 
-        // levels of detail
-        const zoom = this.viewport.scale.x;
-        const zoomSteps = [0.1, 0.2, 0.4, Infinity];
-        const zoomStep = zoomSteps.findIndex(zoomStep => zoom <= zoomStep);
+        if (this.viewport) {
+            // levels of detail
+            const zoom = this.viewport.scale.x;
+            const zoomSteps = [0.1, 0.2, 0.4, Infinity];
+            const zoomStep = zoomSteps.findIndex(zoomStep => zoom <= zoomStep);
 
-        this.graph.forEachNode(nodeKey => {
-            const node = this.nodeKeyToNodeObject.get(nodeKey)!;
-            if (node) {node.updateVisibility(zoomStep);}
-        });
+            this.graph.forEachNode(nodeKey => {
+                const node = this.nodeKeyToNodeObject.get(nodeKey)!;
+                if (node) {node.updateVisibility(zoomStep);}
+            });
 
-        this.graph.forEachEdge(edgeKey => {
-            const edge = this.edgeKeyToEdgeObject.get(edgeKey)!;
-            if (edge) {edge.updateVisibility(zoomStep);}
-        });
+            this.graph.forEachEdge(edgeKey => {
+                const edge = this.edgeKeyToEdgeObject.get(edgeKey)!;
+                if (edge) {edge.updateVisibility(zoomStep);}
+            });
+        }
     }
 
     private onGraphNodeAddedBound = this.onGraphNodeAdded.bind(this);
