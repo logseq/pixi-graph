@@ -477,7 +477,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
             // resolution: window.devicePixelRatio,
             resolution: 2,
             transparent: true,
-            // antialias: true,
+            antialias: true,
             autoDensity: true,
         });
         this.container.appendChild(this.app.view);
@@ -497,7 +497,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
             .pinch()
             .wheel()
             .decelerate()
-            .clampZoom({ minScale: 0.1, maxScale: 2.0 });
+            .clampZoom({ minScale: 0.02, maxScale: 2.0 });
         this.app.stage.addChild(this.viewport);
 
         // create layers
