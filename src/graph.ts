@@ -645,4 +645,12 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
         this.textureCache.destroy();
         this.textureCache = new TextureCache(this.app.renderer);
     }
+
+    getNodesObjects() {
+        return this.nodeKeyToNodeObject
+    }
+
+    getEdgesObjects() {
+        return this.edgeKeyToEdgeObject
+    }
 }
