@@ -490,21 +490,7 @@ export class PixiGraph<NodeAttributes extends BaseNodeAttributes = BaseNodeAttri
             autoDensity: true,
         });
 
-        console.log("this.app");
-        console.dir(this.app);
         this.container.appendChild(this.app.view);
-
-        console.log("this.app.renderer");
-        console.dir(this.app.renderer);
-
-        console.log("this.app.renderer.plugins");
-        console.dir(this.app.renderer.plugins);
-
-        console.log("this.app.renderer.plugins.interaction");
-        console.dir(this.app.renderer.plugins.interaction);
-
-        console.log("this.app.renderer.plugins.interaction.moveWhenInside");
-        console.dir(this.app.renderer.plugins.interaction.moveWhenInside);
 
         this.app.renderer.plugins.interaction.moveWhenInside = true;
         this.app.view.addEventListener('wheel', event => { event.preventDefault() });
